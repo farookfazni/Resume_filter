@@ -1,4 +1,5 @@
 import pickle
+import joblib
 import numpy as np
 import tensorflow as tf
 from keras.utils import pad_sequences
@@ -8,7 +9,12 @@ from keras.preprocessing.text import Tokenizer
 # filename = 'F:/CVFilter/models/model_pk.pkl'
 # with open(filename, 'rb') as file:
 #     model = pickle.load(file)
+
+# Load the saved model
+# model = joblib.load('F:\CVFilter\models\model.joblib')
+
 model = tf.keras.models.load_model('F:\CVFilter\models\model.h5')
+
 tokenfile = 'F:/CVFilter/tokenized_words/tokenized_words.pkl'
 # Load the tokenized words from the pickle file
 with open(tokenfile, 'rb') as file:
