@@ -13,3 +13,5 @@ joblib
 openai
 huggingface_hub
 InstructorEmbedding
+torch
+sentence_transformers

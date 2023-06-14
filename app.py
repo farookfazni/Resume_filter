@@ -9,11 +9,13 @@ from streamlit_extras.add_vertical_space import add_vertical_space
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS
-from langchain.chat_models import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
+# from langchain.chat_models import ChatOpenAI
+# from langchain.memory import ConversationBufferMemory
+# from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
-
+from InstructorEmbedding import INSTRUCTOR
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
@@ -25,31 +27,43 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def handle_user_input(question):
-    response = st.session_state.conversation({'question':question})
-    st.session_state.chat_history = response('chat_history')
+# Assuming this function encodes the question into a vector representation
+def encode_question(question):
+    embeddings = HuggingFaceInstructEmbeddings()  # Instantiate the embeddings model
+    question_vector = embeddings.embed_query(question)  # Encode the question into a vector
+    return question_vector
 
-    for i,message in enumerate(st.session_state.chat_history):
-        if i % 2 == 0:
-            st.write(user_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
-        else:
-            st.write(bot_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
+# def handle_user_input(question):
+#     response = st.session_state.conversation({'question':question})
+#     st.session_state.chat_history = response('chat_history')
 
-def get_conversation_chain(vector_store):
-    llm = ChatOpenAI()
-    meomory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
-    conversation_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=vector_store.as_retriever(),
-        meomory = meomory
-    )
-    return conversation_chain
+#     for i,message in enumerate(st.session_state.chat_history):
+#         if i % 2 == 0:
+#             st.write(user_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
+#         else:
+#             st.write(bot_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
 
-def get_vector_store(text_chunks):
+# def get_conversation_chain(vector_store):
+#     llm = ChatOpenAI()
+#     memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+#     conversation_chain = ConversationalRetrievalChain.from_llm(
+#         llm=llm,
+#         retriever=vector_store.as_retriever(),
+#         memory = memory
+#     )
+#     return conversation_chain
+
+def save_vector_store(text_chunks):
     # embeddings = OpenAIEmbeddings()
-    embeddings = HuggingFaceInstructEmbeddings(model_name='hkunlp/instructor-base')
+    # model = INSTRUCTOR('hkunlp/instructor-base')
+    # embeddings = model.encode(raw_text)
+    embeddings = HuggingFaceInstructEmbeddings()
+    new_db = FAISS.load_local("faiss_index", embeddings)
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
-    return vectorstore
+    new_db.merge_from(vectorstore)
+    new_db.save_local('faiss_index')
+
+    return st.write("vector Store is Saved")
 
 def button_function(all_text):
     # Add your desired functionality here
@@ -94,7 +108,8 @@ def get_pdf_text(pdfs,preprocess=True):
             # Reading Each Page
             for page in pdf_reader.pages:
                 # Extracting Text in Every Page
-                text += page.extract_text()
+                extract_text = page.extract_text()
+                text += preprocess_text(extract_text)
         return text
 
 def filter_keywords(all_text, keywords):
@@ -109,6 +124,7 @@ def filter_keywords(all_text, keywords):
             
 # Main body
 def main():
+    # vector_store = None
     load_dotenv()
     st.header("Resume Filter using Keywords 💬")
 
@@ -123,6 +139,17 @@ def main():
 
         # Choose functionality: Prediction or Filtering
         functionality = st.radio("Choose functionality:", ("Make Predictions", "Filter Keywords","Predict the Suitable canditate","Ask Questions"))
+        if functionality == "Ask Questions":
+            if st.button('Process'):
+                with st.spinner("Processing"):
+                    # get pdf text
+                    raw_text = get_pdf_text(pdfs, preprocess=False)
+
+                    # get the text chunk
+                    text_chunks = get_text_chunks(raw_text)
+
+                    # create vector store
+                    save_vector_store(text_chunks)
         add_vertical_space(5)
         st.write('Made with ❤️ by Fazni Farook')
 
@@ -130,11 +157,11 @@ def main():
     if pdfs is not None:
         all_text = get_pdf_text(pdfs)
 
-        if 'conversation' not in st.session_state:
-            st.session_state.conversation = None
+        # if 'conversation' not in st.session_state:
+        #     st.session_state.conversation = None
 
-        if 'chat_history' not in st.session_state:
-            st.session_state.chat_history = None
+        # if 'chat_history' not in st.session_state:
+        #     st.session_state.chat_history = None
 
         if functionality == "Make Predictions":
             if st.button('Make Prediction'):
@@ -149,7 +176,6 @@ def main():
                         # st.markdown(text, unsafe_allow_html=True)
                         st.markdown(f"**Prediction: {pred}**")
                         st.markdown("---")
-
 
         elif functionality == "Filter Keywords":
             # getting the keywords
@@ -189,25 +215,27 @@ def main():
                         st.markdown("No match found")
 
         elif functionality == "Ask Questions":
+
+            embeddings = HuggingFaceInstructEmbeddings()
+
+            new_db = FAISS.load_local("faiss_index", embeddings)
+
             st.write(css,unsafe_allow_html=True)
-            
-            if st.button("Process"):
+
+            # create conversation chain
+            # st.session_state.conversation = get_conversation_chain(vector_store)
+
+            question = st.text_input("Ask Question")
+
+            if st.button('Ask Question'):
                 with st.spinner("Processing"):
-                    # get pdf text
-                    raw_text = get_pdf_text(pdfs,preprocess=False)
+                    if question:
+                        # Convert the question to a vector
+                        question_vector = encode_question(question)
 
-                    # get the text chunk
-                    text_chunks = get_text_chunks(raw_text)
-
-                    # create vector store 
-                    vector_store = get_vector_store(text_chunks)
-
-                    # create conversation chain
-                    st.session_state.conversation = get_conversation_chain(vector_store)
-
-            question  = st.text_input("Ask Question")
-            if question:
-                handle_user_input(question)
+                        # Convert the vector store to a compatible format
+                        output = new_db.similarity_search_by_vector(question_vector)
+                        st.write(output[0])
                 
-if __name__=='__main__':
+if __name__=='__main__': 
     main()
