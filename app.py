@@ -58,10 +58,10 @@ def save_vector_store(text_chunks):
     # model = INSTRUCTOR('hkunlp/instructor-base')
     # embeddings = model.encode(raw_text)
     embeddings = HuggingFaceInstructEmbeddings()
-    new_db = FAISS.load_local("faiss_index", embeddings)
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
+    new_db = FAISS.load_local("faiss_index_V2", embeddings)
     new_db.merge_from(vectorstore)
-    new_db.save_local('faiss_index')
+    new_db.save_local('faiss_index_V2')
 
     return st.write("vector Store is Saved")
 
@@ -108,8 +108,9 @@ def get_pdf_text(pdfs,preprocess=True):
             # Reading Each Page
             for page in pdf_reader.pages:
                 # Extracting Text in Every Page
-                extract_text = page.extract_text()
-                text += preprocess_text(extract_text)
+                text += page.extract_text()
+
+        # text = preprocess_text(text)
         return text
 
 def filter_keywords(all_text, keywords):
@@ -218,7 +219,7 @@ def main():
 
             embeddings = HuggingFaceInstructEmbeddings()
 
-            new_db = FAISS.load_local("faiss_index", embeddings)
+            new_db = FAISS.load_local("faiss_index_V2", embeddings)
 
             st.write(css,unsafe_allow_html=True)
 
@@ -235,7 +236,8 @@ def main():
 
                         # Convert the vector store to a compatible format
                         output = new_db.similarity_search_by_vector(question_vector)
-                        st.write(output[0])
+                        page_content = output[0].page_content
+                        st.write(page_content)
                 
 if __name__=='__main__': 
     main()
