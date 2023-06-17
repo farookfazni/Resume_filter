@@ -17,4 +17,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://fazni:$HF_TOKEN@huggingface.co/spaces/fazni/Resume-filter-plus-QA-documents main
+        run: git push --force https://fazni:$HF_TOKEN@huggingface.co/spaces/fazni/Resume-filter-plus-QA-documents main
