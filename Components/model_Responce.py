@@ -13,9 +13,9 @@ from keras.preprocessing.text import Tokenizer
 # Load the saved model
 # model = joblib.load('F:\CVFilter\models\model.joblib')
 
-model = tf.keras.models.load_model('F:\CVFilter\models\model.h5')
+model = tf.keras.models.load_model('models\model.h5')
 
-tokenfile = 'F:/CVFilter/tokenized_words/tokenized_words.pkl'
+tokenfile = 'tokenized_words/tokenized_words.pkl'
 # Load the tokenized words from the pickle file
 with open(tokenfile, 'rb') as file:
     loaded_tokenized_words = pickle.load(file)
