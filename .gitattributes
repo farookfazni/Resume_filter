@@ -1,5 +1,8 @@
 faiss_index_V2/index.faiss filter=lfs diff=lfs merge=lfs -text
 faiss_index_V2/index.pkl filter=lfs diff=lfs merge=lfs -text
 models/model.h5 filter=lfs diff=lfs merge=lfs -text
+models/model.joblib filter=lfs diff=lfs merge=lfs -text
+models/model_pk.pkl filter=lfs diff=lfs merge=lfs -text
+faiss_index/index.pkl filter=lfs diff=lfs merge=lfs -text
 pattern/to/migrate !text !filter !merge !diff
 pattern/to/migrate filter=lfs diff=lfs merge=lfs -text
