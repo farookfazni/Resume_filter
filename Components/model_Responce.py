@@ -52,6 +52,7 @@ def model_prediction(text, model=model, tokenizer=tokenizer, labels=outcome_labe
     # Tokenize the text
     inputs = tokenizer(text, return_tensors="pt")
     outputs = model(**inputs)
+    
     # Get the predicted class probabilities
     probs = outputs.logits.softmax(dim=-1)
 
