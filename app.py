@@ -57,7 +57,7 @@ def main():
         add_vertical_space(5)
         st.write('Made with ❤️ by Fazni Farook')
 
-
+    vector_store = None
     if pdfs is not None:
         all_text = get_pdf_text(pdfs)
 
@@ -153,8 +153,10 @@ def main():
                         # output = new_db.similarity_search_by_vector(question_vector)
                         # page_content = output[0].page_content
 
+                        
                         # Asking Questions using Google Palm
                         chain = get_qa_chain(embeddings)
+                        # docs = vector_store.similarity_search(question)
                         response = chain(question)
                         st.header("Answer: ")
                         st.write(response["result"])

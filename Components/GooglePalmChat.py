@@ -18,6 +18,8 @@ def get_qa_chain(embeddings):
     # Create a retriever for querying the vector database
     retriever = vectordb.as_retriever(score_threshold=0.7)
 
+    # retriever = vector_store.as_retriever(search_type="mmr")
+
     prompt_template = """Given the following context and a question, generate an answer based on this context only.
     In the answer try to provide as much text as possible from the source document context without making much changes.
     If the answer is not found in the context, kindly state "I don't know." Don't try to make up an answer.
