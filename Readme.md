@@ -10,7 +10,7 @@ The model is deployed and running on the Hugging Face model hub in the `fazni/Re
 
 - **Pre-trained Model:** fazni/distilbert-base-uncased-career-path-prediction
 - **Training Dataset:** fazni/role-based-on-skills-2.0
-- **Live Model:** [Resume Filter on Hugging Face](https://huggingface.co/fazni/Resume-filter-plus-QA-documents)
+- **Live Model:** [Resume Filter on Hugging Face](https://fazni-resume-filter-plus-qa-documents.hf.space)
 
 ## Q&A Documents
 
